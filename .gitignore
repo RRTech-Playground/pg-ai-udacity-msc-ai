@@ -1,0 +1,16 @@
+# Udacity MSc AI
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+/out/
+
+### Python ###
+venv/
+.ipynb_checkpoints/
+__pycache__
+
+### ML/AI ###
+/**/data/
