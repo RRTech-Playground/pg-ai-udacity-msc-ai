@@ -3,9 +3,9 @@
 ## Setup
 
 ### Python Environment
-We use [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+We use [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
-You can install it with brew
+You can install it with brew. However, somtimes a local venv is enough.
 ```bash
 brew install miniconda
 ```
@@ -48,28 +48,47 @@ conda env export --file environment.yml    # Exports environment to a yaml file
 conda env create --file environment.yml -n q-env    # Create an environment from a yaml file
 ```
 
+Sometimes we want a local venv [venv](https://towardsdatascience.com/virtual-environments-104c62d48c54).
+
+#### Working with venv
+
+Create the virtual environment
+```bash
+python3 -m venv venv/       # Creates an environment called venv/
+```
+
+Activate the virtual environment
+```bash
+source venv/bin/activate
+```
+
+To clean up and go back to the system-wide Python just deactivate the current environment
+```bash
+deactivate
+```
+
+To write an environment to a file and install it from a file
+```bash
+pip freeze > requirements.txt
+```
+
+```bash
+pip install -r requirements.txt
+```
+
 ### Install dependencies
 Now we need to install the needed dependencies
 
-
-
-
-
-
-
----
-Old
-
-
-You don't need to install python, PyEnv, pip, venv and all the tooling.
+With conda you don't need to install python, PyEnv, pip, venv and all the tooling.
 Python itself comes with Miniconda and conda does a great job combining whats needed.
 Following this post to learn why https://codesolid.com/conda-vs-pip
-
 However, it's ok if you have python and all the other toos installed.
 
-
-
-
+#### Python
+```bash
+conda install python=3.13    # To install Python
+python --version
+```
 
 #### Jupyter
 ```bash
@@ -95,7 +114,7 @@ udacity submit
 #### Tools
 ```bash
 pip install ipywidgets    
-pip install rise pylatexenc    
+pip install rise pylatexenc
 ```
 
 #### Qiskit
@@ -135,13 +154,19 @@ Then continue with the [docs](https://vatlab.github.io/sos-docs/doc/user_guide/e
 and find more languages [here](https://vatlab.github.io/sos-docs/running.html#Supported-Languages).
 
 You can find more information about SOS [SoS Home](https://vatlab.github.io/sos-docs/) and [Documentation](https://vatlab.github.io/sos-docs/doc/user_guide/multi_kernel_notebook.html).
- 
+
+
 ### Start Notebook
 ```bash
 jupyter lab   # Start
 #jupyter notebook   # Start
 ```
+Or just use a kotlin notebook in intellij.
+
 
 ### Day2 Maintenance
-tbc
 
+To update pip
+```bash
+python3 -m pip install --upgrade pip
+```
