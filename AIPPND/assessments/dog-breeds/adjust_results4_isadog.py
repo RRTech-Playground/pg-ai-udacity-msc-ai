@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # */AIPND-revision/intropyproject-classify-pet-images/adjust_results4_isadog.py
 #                                                                             
-# PROGRAMMER: 
-# DATE CREATED:                                 
+# PROGRAMMER: Roland Ringgenberg
+# DATE CREATED: 11/24/2025                                
 # REVISED DATE: 
 # PURPOSE: Create a function adjust_results4_isadog that adjusts the results 
 #          dictionary to indicate whether or not the pet image label is of-a-dog, 
@@ -66,5 +66,45 @@ def adjust_results4_isadog(results_dic, dogfile):
                maltese) (string - indicates text file's filename)
     Returns:
            None - results_dic is mutable data type so no return needed.
-    """           
-    None
+    """
+
+    # Guard clause: basic validation
+    if results_dic is None or not isinstance(results_dic, dict):
+        raise ValueError("results_dic must be a dictionary of results")
+    if not dogfile:
+        raise ValueError("dogfile path must be provided")
+
+    # 1) Load dog names into a set for O(1) membership tests
+    dognames = set()
+    with open(dogfile, 'r') as f:
+        for line in f:
+            name = line.strip().lower()
+            # skip empty lines and comments
+            if not name or name.startswith('#'):
+                continue
+            dognames.add(name)
+
+    # 2) For each image entry, determine if pet label and classifier label are dogs
+    for filename, values in results_dic.items():
+        # Expecting the structure: [pet_label, classifier_label, match_flag]
+        if not isinstance(values, list) or len(values) < 3:
+            raise ValueError(
+                f"results_dic entry for '{filename}' must be a list with at least 3 items"
+            )
+
+        pet_label = str(values[0]).strip().lower()
+        classifier_label_raw = str(values[1]).strip().lower()
+
+        # Determine if pet image label is-a-dog
+        pet_is_dog = 1 if pet_label in dognames else 0
+
+        # Classifier label can contain multiple comma-separated names
+        classifier_is_dog = 0
+        for candidate in classifier_label_raw.split(','):
+            cand = candidate.strip()
+            if cand in dognames:
+                classifier_is_dog = 1
+                break
+
+        # 3) Extend the results list with the two flags at indices 3 and 4
+        values.extend([pet_is_dog, classifier_is_dog])
