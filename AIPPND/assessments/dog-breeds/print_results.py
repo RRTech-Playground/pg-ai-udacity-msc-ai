@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # */AIPND-revision/intropyproject-classify-pet-images/print_results.py
 #                                                                             
-# PROGRAMMER: 
-# DATE CREATED:
+# PROGRAMMER: Roland Ringgenberg
+# DATE CREATED: 11/24/2025
 # REVISED DATE: 
 # PURPOSE: Create a function print_results that prints the results statistics
 #          from the results statistics dictionary (results_stats_dic). It 
@@ -62,5 +62,68 @@ def print_results(results_dic, results_stats_dic, model,
     Returns:
            None - simply printing results.
     """    
-    None
+    # Header
+    print("\n\n*** Results Summary for CNN Model Architecture:", model)
+    print("-" * 70)
+
+    # Basic counts
+    print(f"Number of Images: {results_stats_dic.get('n_images', 0)}")
+    print(f"Number of Dog Images: {results_stats_dic.get('n_dogs_img', 0)}")
+    print(f"Number of Not-a-Dog Images: {results_stats_dic.get('n_notdogs_img', 0)}")
+
+    # Counts detail
+    print("\nCounts:")
+    for k in [
+        'n_match',
+        'n_correct_dogs',
+        'n_correct_notdogs',
+        'n_correct_breed',
+    ]:
+        if k in results_stats_dic:
+            print(f"  {k}: {results_stats_dic[k]}")
+
+    # Percentages
+    print("\nPercentages:")
+    for k in sorted([key for key in results_stats_dic.keys() if key.startswith('pct')]):
+        print(f"  {k}: {results_stats_dic[k]:.1f}%")
+
+    # Print misclassified dogs if requested
+    if print_incorrect_dogs:
+        n_images = results_stats_dic.get('n_images', 0)
+        n_correct_dogs = results_stats_dic.get('n_correct_dogs', 0)
+        n_correct_notdogs = results_stats_dic.get('n_correct_notdogs', 0)
+        if (n_correct_dogs + n_correct_notdogs) != n_images:
+            print("\nMisclassified Dogs (Dog vs. Not-a-Dog):")
+            for fname, vals in results_dic.items():
+                pet_is_dog = vals[3]
+                clf_is_dog = vals[4]
+                if pet_is_dog != clf_is_dog:
+                    pet_label = vals[0]
+                    clf_label = vals[1]
+                    print(f"  FILE: {fname}")
+                    if pet_is_dog == 1 and clf_is_dog == 0:
+                        print(f"    True: DOG | Pred: NOT-A-DOG | pet: '{pet_label}' | clf: '{clf_label}'")
+                    elif pet_is_dog == 0 and clf_is_dog == 1:
+                        print(f"    True: NOT-A-DOG | Pred: DOG | pet: '{pet_label}' | clf: '{clf_label}'")
+        else:
+            print("\nNo misclassified dogs (dog vs. not-a-dog).")
+
+    # Print misclassified breeds if requested
+    if print_incorrect_breed:
+        n_dogs_img = results_stats_dic.get('n_dogs_img', 0)
+        n_correct_breed = results_stats_dic.get('n_correct_breed', 0)
+        if n_dogs_img > 0 and n_correct_breed != n_dogs_img:
+            print("\nMisclassified Dog Breeds:")
+            for fname, vals in results_dic.items():
+                is_match = vals[2]
+                pet_is_dog = vals[3]
+                clf_is_dog = vals[4]
+                # Both are dogs but breed does not match
+                if pet_is_dog == 1 and clf_is_dog == 1 and is_match == 0:
+                    pet_label = vals[0]
+                    clf_label = vals[1]
+                    print(f"  FILE: {fname}")
+                    print(f"    True breed: '{pet_label}' | Pred breed: '{clf_label}'")
+        else:
+            print("\nNo misclassified dog breeds.")
                 
