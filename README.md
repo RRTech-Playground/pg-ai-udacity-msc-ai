@@ -45,7 +45,15 @@ To save an environment to a file and load from a file
 conda env export --file environment.yml    # Exports environment to a yaml file
 ``` 
 ```bash
-conda env create --file environment.yml -n q-env    # Create an environment from a yaml file
+conda env create --file environment.yml -n udacity-ai-env    # Create an environment from a yaml file
+```
+
+```bash
+# Day two
+conda upgrade conda # However, this does not work, miniconda?
+conda update -n base -c defaults conda # This does not work either
+
+conda upgrade --all # Does work and updates installed packages, but doesn't update conda
 ```
 
 Sometimes we want a local venv [venv](https://towardsdatascience.com/virtual-environments-104c62d48c54).
@@ -94,6 +102,8 @@ python --version
 ```bash
 conda install jupyterlab
 #conda install notebook
+
+conda install nb_conda  # Only needed to manage conda environments in Jupyter
 ```
 ```bash
 jupyter --version    # Shows what's installed of jupyter
@@ -138,17 +148,37 @@ pip install kotlin-jupyter-kernel
 #### SOS Multi-Kernel
 To work with multiple kernels in the same Notebook we use SOS
 ```bash
+conda install jupyterlab-sos -c conda-forge
+pip install jupyterlab-sos
+
+conda install sos-notebook -c conda-forge 
+pip install sos-notebook
+
+# Workflows
 conda install jupyter_contrib_nbextensions -c conda-forge
 conda install sos -c conda-forge
 conda install sos-pbs -c conda-forge
 conda install jupyterlab-sos -c conda-forge
 conda install sos-notebook -c conda-forge
 conda install sos-papermill -c conda-forge
-#conda install sos-r sos-python -c conda-forge  # SOS Kernels
+conda install sos-r sos-python -c conda-forge  # SOS Kernels for R and Python
+
+# List kernels
 jupyter kernelspec list  # To check the kernels we have
-#jupyter kernelspec uninstall unwanted-kernel
-python -m sos_notebook.install # Link the SOS magic into the notebook based on the existing kernels
+jupyter kernelspec uninstall <unwanted-kernel>
+
+# Link the SOS magic into the notebook based on the existing kernels
+python -m sos_notebook.install 
 ```
+
+#### virtualenv or pipenv
+If you are using virtualenv or pipenv, you might need to remove the sos kernel installed globally to install sos for the particular python interpreter of the virtual env.
+
+```bash
+jupyter kernelspec remove sos
+python -m sos_notebook.install
+```
+
 Start a notebook to see if the dropdowns of the kernels are reflected.
 Then continue with the [docs](https://vatlab.github.io/sos-docs/doc/user_guide/exchange_variable.html)
 and find more languages [here](https://vatlab.github.io/sos-docs/running.html#Supported-Languages).
@@ -163,6 +193,63 @@ jupyter lab   # Start
 ```
 Or just use a kotlin notebook in intellij.
 
+
+### Markdown
+
+https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet
+
+### Math in LaTeX
+To use Mathematical formulas with LaTeX in Markdown with the double $$ signs
+
+```markdown
+$$ y = \frac{a}{b+c} $$
+```
+A great [tutorial](https://latex-tutorial.com/tutorials/amsmath/) on using LaTeX to create math expressions.
+
+
+### Magic Keywords
+
+Timer
+```markdown
+%timeit  [comment]: for execution on one line
+%%timeit [comment]: for execution on multiple lines
+```
+
+Inline mathplotlib
+```markdown
+%matplotlib inline
+%config InlineBackend.figure_format = 'retina'
+```
+
+Use `pdb` to debug code. http://ipython.readthedocs.io/en/stable/interactive/magics.html
+```markdown
+%pdb [comment]: Turn it on in the cell before or the exectuing cell
+```
+More info https://docs.python.org/3/library/pdb.html 
+and about magic functions https://ipython.readthedocs.io/en/stable/interactive/magics.html
+
+### Convert Notebooks
+A notebook is just json, its easy to convert it into HTML, LaTeX, PDF, WebPDF, Reveal.js HTML slideshow, Markdown, Ascii, reStructuredText, executable script, notebook etc.
+```bash
+pip install nbconvert 
+jupyter nbconvert --to html mynotebook.ipynb
+```
+
+Learn more about nbconvert from the [documentation](https://nbconvert.readthedocs.io/en/latest/usage.html).
+
+### Running Slideshows
+You need to designate which cells are slides and the type of slide the cell will be. 
+In the menu bar, click View > Cell Toolbar > Slideshow to bring up the slide cell menu on each cell.
+
+To convert a notebook into a slideshow
+```bash
+jupyter nbconvert notebook.ipynb --to slides
+```
+
+Run the slideshow from a html server, in Jupyter directly
+```bash
+jupyter nbconvert notebook.ipynb --to slides --post serve
+```
 
 ### Day2 Maintenance
 
