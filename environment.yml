@@ -93,7 +93,6 @@ dependencies:
   - python-dateutil=2.9.0post0=py313hca03da5_2
   - python-tzdata=2025.2=pyhd3eb1b0_0
   - python_abi=3.13=1_cp313
-  - pytorch=2.8.0=gpu_mps_py313h8664c9e_201
   - pytz=2025.2=py313hca03da5_0
   - readline=8.3=h0b18652_0
   - readme_renderer=44.0=py313hca03da5_0
@@ -148,6 +147,8 @@ dependencies:
       - pyzmq==27.1.0
       - ringgis-probability-distributions==0.2.7
       - stack-data==0.6.3
+      - torch==2.9.1
+      - torchvision==0.24.1
       - traitlets==5.14.3
       - types-pytz==2025.2.0.20251108
       - wcwidth==0.2.14
