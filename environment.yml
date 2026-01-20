@@ -126,6 +126,7 @@ dependencies:
       - debugpy==1.8.19
       - decorator==5.2.1
       - executing==2.2.1
+      - helper==2.5.0
       - ipykernel==7.1.0
       - ipython==9.9.0
       - ipython-pygments-lexers==1.1.1
@@ -143,6 +144,7 @@ dependencies:
       - psutil==7.2.1
       - ptyprocess==0.7.0
       - pure-eval==0.2.3
+      - pyyaml==6.0.3
       - pyzmq==27.1.0
       - ringgis-probability-distributions==0.2.7
       - stack-data==0.6.3
