@@ -9,6 +9,7 @@
 
 ### ML/AI ###
 data/
+*.pth
 
 ### Python ###
 
