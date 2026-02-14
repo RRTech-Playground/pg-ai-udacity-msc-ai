@@ -84,7 +84,39 @@ pip freeze > requirements.txt
 pip install -r requirements.txt
 ```
 
-### Install dependencies
+#### Working with uv
+
+And if we use uv, here is a short how to.
+
+```bash
+brew install uv
+```
+
+##### Key Features
+
+- **Performance**: It is 10–100x faster than pip and other traditional managers. It uses a global cache and parallel downloads to resolve and install dependencies in milliseconds.
+- **Unified Tooling**: It replaces pip, pip-tools, pipx, poetry, pyenv, and virtualenv with a single binary.
+- **Python Version Management**: It can install and switch between different Python versions (e.g., uv python install 3.12) without needing separate tools like pyenv.
+- **Reproducibility**: It uses a universal uv.lock file to ensure the exact same environment is recreated across different machines.
+- **Script Support**: You can run single-file scripts with metadata-defined dependencies using uv run script.py.
+
+##### Common Commands
+
+```bash
+uv init  # Initialize project	
+uv add <package_name>  # Add a package	
+uv run <file.py>  # Run a script	
+uv sync # Sync dependencies	 
+uvx <tool_name> (similar to pipx)  # Install a tool	
+
+# Python Version Management
+uv python install <version>  # Install Python
+uv python pin <version>  # Switch to a specific Python version
+uv python list  # List installed Python versions
+uv python uninstall <version>  # Uninstall Python
+```
+
+### Install dependencies (with conda)
 Now we need to install the needed dependencies
 
 With conda you don't need to install python, PyEnv, pip, venv and all the tooling.
