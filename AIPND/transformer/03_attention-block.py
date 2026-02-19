@@ -1,0 +1,157 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from torch.utils.data import Dataset, DataLoader, RandomSampler
+
+from pathlib import Path
+
+
+#######################
+# Device
+
+device = (
+    torch.accelerator.current_accelerator().type
+    if torch.accelerator.is_available()
+    else "cpu"
+)
+print(f"Device set to: {device}")
+
+
+#######################
+# Data
+
+text = Path("data/tiny-shakespeare.txt").read_text()
+print(text[0:100])
+
+class CharTokenizer:
+    def __init__(self, vocabulary):
+        self.token_id_for_char = {
+            char: token_id for token_id, char in enumerate(vocabulary)
+        }
+        self.char_for_token_id = {
+            token_id: char for token_id, char in enumerate(vocabulary)
+        }
+
+
+    @staticmethod
+    def train_from_text(text):
+        vocabulary = set(text)
+        return CharTokenizer(sorted(list(vocabulary)))
+
+    def encode(self, text):
+        token_ids = []
+        for char in text:
+            token_ids.append(self.token_id_for_char[char])
+        return torch.tensor(token_ids, dtype=torch.long)
+
+    def decode(self, token_ids):
+        chars = []
+        for token_id in token_ids.tolist():
+            chars.append(self.char_for_token_id[token_id])
+        return "".join(chars)
+
+    def vocabulary_size(self):
+        return len(self.token_id_for_char)
+
+tokenizer = CharTokenizer.train_from_text(text)
+print(tokenizer.encode("Hello world"))
+print(tokenizer.decode(tokenizer.encode("Hello world")))
+print(f"Vocabulary size: {tokenizer.vocabulary_size()}")
+
+class TokenIdsDataset(Dataset):
+    def __init__(self, data, block_size):
+        self.data = data
+        self.block_size = block_size
+
+    def __len__(self):
+        return len(self.data) - self.block_size
+
+    def __getitem__(self, pos):
+        assert pos < len(self.data) - self.block_size
+
+        x = self.data[pos : pos + self.block_size]
+        y = self.data[pos + 1 : pos + 1 + self.block_size]
+
+        return x, y
+
+
+#######################
+# Config
+
+config = {
+    "vocabulary_size": tokenizer.vocabulary_size(),
+    "context_size": 256,
+    "embedding_dim": 768,
+    "heads_num": 12,
+    "layers_num": 10,
+    "dropout_rate": 0.1,
+    "use_bias": False,
+}
+
+config["head_size"] = config["embedding_dim"] // config["heads_num"]
+
+
+#######################
+# Attention Block
+
+class AttentionHead(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.Q_weights = nn.Linear(config["embedding_dim"], config["head_size"], bias=config["use_bias"])
+        self.K_weights = nn.Linear(config["embedding_dim"], config["head_size"], bias=config["use_bias"])
+        self.V_weights = nn.Linear(config["embedding_dim"], config["head_size"], bias=config["use_bias"])
+
+        self.dropout = nn.Dropout(config["dropout_rate"])
+
+        casual_attention_mask = torch.tril(torch.ones(config["context_size"], config["context_size"]))
+        self.register_buffer("causal_attention_mask", casual_attention_mask)
+
+
+    def forward(self, input): # (B, C, embedding_din) B = batch size, C = context size
+        bach_size, tokens_num, embedding_dim = input.shape
+        Q = self.Q_weights(input) # (B, C, head_size)
+        K = self.K_weights(input) # (B, C, head_size)
+        V = self.V_weights(input) # (B, C, head_size)
+
+        attention_scores = Q @ K.transpose(1, 2)  # (B, C, C)
+        attention_scores = attention_scores.masked_fill(
+            self.causal_attention_mask[:tokens_num, :tokens_num] == 0,
+            -torch.inf
+        )
+        attention_scores = attention_scores / ( K.shape[-1] ** 0.5 )
+        attention_scores = torch.softmax(attention_scores, dim=-1)
+        attention_scores = self.dropout(attention_scores)
+
+        return attention_scores @ V # (B, C, head_size)
+
+input = torch.rand(8, config["context_size"], config["embedding_dim"])
+ah = AttentionHead(config)
+output = ah(input)
+print(output.shape) # Batche size, context size, head size
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+
+        heads_list = [AttentionHead(config) for _ in range(config["heads_num"])]
+        self.heads = nn.ModuleList(heads_list)
+
+        self.linear = nn.Linear(config["embedding_dim"], config["embedding_dim"])
+        self.dropout = nn.Dropout(config["dropout_rate"])
+
+
+    def forward(self, input):
+        # print(f"Input shape: {input.shape}")
+        heads_outputs = [head(input) for head in self.heads]
+
+        scores_change = torch.cat(heads_outputs, dim=-1)
+        # print(f"heads shape: {scores_change.shape}")
+
+        scores_change = self.linear(scores_change)
+        return self.dropout(scores_change)
+
+mha = MultiHeadAttention(config)
+input = torch.rand(8, config["context_size"], config["embedding_dim"])
+output = mha(input)
+print(output.shape) # Now the head size is equal to embedding_dim
