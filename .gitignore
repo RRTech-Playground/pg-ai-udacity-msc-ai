@@ -10,6 +10,7 @@
 ### ML/AI ###
 data/
 *.pth
+*.pt
 
 ### Python ###
 
