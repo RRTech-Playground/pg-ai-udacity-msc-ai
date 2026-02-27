@@ -91,7 +91,13 @@ def build_model(arch, hidden_units, num_classes):
         model = getattr(models, arch)(weights='DEFAULT')
         if hasattr(model, 'classifier'):
             if isinstance(model.classifier, nn.Sequential):
-                input_features = model.classifier[0].in_features
+                # Try to find the first Linear layer in classifier
+                for layer in model.classifier:
+                    if hasattr(layer, 'in_features'):
+                        input_features = layer.in_features
+                        break
+                else:
+                    raise ValueError(f"Could not find Linear layer in classifier for architecture {arch}")
             else:
                 input_features = model.classifier.in_features
         elif hasattr(model, 'fc'):
