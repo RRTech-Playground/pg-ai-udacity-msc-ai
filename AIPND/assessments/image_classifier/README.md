@@ -26,6 +26,11 @@ python train.py data_directory
 * Set hyperparameters (e.g., single or multiple hidden layers): `python train.py data_dir --learning_rate 0.01 --hidden_units 4096 512 --epochs 20`
 * Use GPU for training: `python train.py data_dir --gpu`
 
+### Example:
+```bash
+python train.py "data/flowers" --save_dir checkpoints --arch "vgg13" --learning_rate 0.01 --hidden_units 512 --epochs 1 --gpu 
+```
+
 ## Prediction
 
 The `predict.py` script uses a saved checkpoint to predict the class of an image.
