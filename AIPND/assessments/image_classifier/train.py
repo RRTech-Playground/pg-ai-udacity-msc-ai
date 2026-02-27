@@ -1,7 +1,3 @@
-# Use argparse to provide following possible elements from the command line
-# python train.py "data/flowers" --save-dir "checkpoints" --arch "vgg13" --learning-rate 0.01 --hidden-units 512 --epochs 20 --gpu
-# Only the path to the data is mandatory, the rest is optional
-
 import argparse
 import torch
 from torch import nn, optim
