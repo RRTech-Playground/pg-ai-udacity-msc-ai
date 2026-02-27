@@ -1,6 +1,6 @@
 # Image Classifier Project
 
-This project contains a command-line application to train a deep learning model on a dataset of images and then use that trained model to predict the class of new images. It uses a pretrained network from `torchvision.models` and applies transfer learning to classify specific categories (e.g., different species of flowers).
+This project contains a command-line application to train a deep learning model on a dataset of images and then use that trained model to predict the class of new images. It uses a pretrained network from `torchvision.models` and applies transfer learning to classify specific categories (e.g., different species of flowers). The training set and checkpoints are not included to keep the zip file small, but it's the same layout as in the workspace. There is only the two files train.py and predict.py. Similar code is 'as a copy' in each file.
 
 ## Data Requirements
 
