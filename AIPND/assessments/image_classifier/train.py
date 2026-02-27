@@ -166,6 +166,37 @@ def train_model(model, dataloaders, criterion, optimizer, epochs, device):
                 model.train()
     print("Training finished.")
 
+def test_model(model, dataloaders, device):
+    """
+    Tests the model's accuracy on the test dataset.
+    """
+    print("Testing model on test dataset...")
+    accuracy = 0
+    model.to(device)
+    model.eval()
+    
+    with torch.no_grad():
+        for images, labels in dataloaders['test']:
+            images, labels = images.to(device), labels.to(device)
+            
+            logps = model.forward(images)
+            ps = torch.exp(logps)
+            top_p, top_class = ps.topk(1, dim=1)
+            equals = top_class == labels.view(*top_class.shape)
+            accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+            
+    print(f"Test accuracy: {accuracy/len(dataloaders['test']):.3f}")
+
+def load_checkpoint(filepath):
+    """
+    Loads a checkpoint and rebuilds the model.
+    """
+    checkpoint = torch.load(filepath)
+    model = build_model(checkpoint['arch'], checkpoint['hidden_units'], len(checkpoint['class_to_idx']))
+    model.load_state_dict(checkpoint['state_dict'])
+    model.class_to_idx = checkpoint['class_to_idx']
+    return model
+
 def main():
     args = get_input_args()
     
@@ -198,6 +229,9 @@ def main():
     
     # Train model
     train_model(model, dataloaders, criterion, optimizer, args.epochs, device)
+    
+    # Test model
+    test_model(model, dataloaders, device)
     
     # Save checkpoint
     model.class_to_idx = image_datasets['train'].class_to_idx
