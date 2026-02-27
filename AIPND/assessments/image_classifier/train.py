@@ -19,7 +19,7 @@ def get_input_args():
     parser.add_argument('--arch', type=str, default='vgg13', help='CNN model architecture (vgg13, vgg16, alexnet)')
     parser.add_argument('--learning_rate', type=float, default=0.01, help='Learning rate')
     parser.add_argument('--hidden_units', type=int, nargs='+', default=[512], help='Number of hidden units in the classifier (can provide multiple)')
-    parser.add_argument('--epochs', type=int, default=5, help='Number of training epochs')
+    parser.add_argument('--epochs', type=int, default=20, help='Number of training epochs')
     parser.add_argument('--gpu', action='store_true', help='Use GPU for training if available')
     
     return parser.parse_args()
