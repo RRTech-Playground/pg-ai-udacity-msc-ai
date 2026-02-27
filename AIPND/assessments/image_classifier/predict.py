@@ -26,7 +26,8 @@ def get_input_args():
 
 def build_model(arch, hidden_units, num_classes):
     """
-    Builds the model with a custom classifier (same logic as in train.py).
+    Builds the model with a custom classifier. 
+    Supports both a single integer or a list of integers for hidden_units.
     """
     if arch.startswith('vgg'):
         model = getattr(models, arch)(weights='DEFAULT')
@@ -59,13 +60,23 @@ def build_model(arch, hidden_units, num_classes):
         param.requires_grad = False
         
     # Define new classifier
-    classifier = nn.Sequential(OrderedDict([
-        ('fc1', nn.Linear(input_features, hidden_units)),
-        ('relu', nn.ReLU()),
-        ('dropout', nn.Dropout(0.2)),
-        ('fc2', nn.Linear(hidden_units, num_classes)), 
-        ('output', nn.LogSoftmax(dim=1))
-    ]))
+    if isinstance(hidden_units, (int, float)):
+        hidden_layers = [int(hidden_units)]
+    else:
+        hidden_layers = hidden_units # assuming it's a list
+        
+    classifier_layers = []
+    last_in = input_features
+    for h in hidden_layers:
+        classifier_layers.append(nn.Linear(last_in, h))
+        classifier_layers.append(nn.ReLU())
+        classifier_layers.append(nn.Dropout(0.2))
+        last_in = h
+    
+    classifier_layers.append(nn.Linear(last_in, num_classes))
+    classifier_layers.append(nn.LogSoftmax(dim=1))
+    
+    classifier = nn.Sequential(*classifier_layers)
     
     if hasattr(model, 'classifier'):
         model.classifier = classifier
@@ -80,9 +91,25 @@ def load_checkpoint(filepath):
     """
     # Load on CPU first to avoid issues if GPU is not available
     checkpoint = torch.load(filepath, map_location=lambda storage, loc: storage, weights_only=False)
-    model = build_model(checkpoint['arch'], checkpoint['hidden_units'], len(checkpoint['class_to_idx']))
+    
+    # Handle different possible keys for metadata
+    arch = checkpoint.get('arch')
+    hidden_units = checkpoint.get('hidden_units', checkpoint.get('hidden_layers'))
+    
+    if 'class_to_idx' in checkpoint:
+        num_classes = len(checkpoint['class_to_idx'])
+    else:
+        num_classes = checkpoint.get('output_size')
+        
+    if arch is None or hidden_units is None or num_classes is None:
+        raise KeyError(f"Checkpoint at {filepath} is missing mandatory keys (arch, hidden_units/layers, class_to_idx/output_size)")
+
+    model = build_model(arch, hidden_units, num_classes)
     model.load_state_dict(checkpoint['state_dict'])
-    model.class_to_idx = checkpoint['class_to_idx']
+    
+    if 'class_to_idx' in checkpoint:
+        model.class_to_idx = checkpoint['class_to_idx']
+        
     return model
 
 def process_image(image_path):

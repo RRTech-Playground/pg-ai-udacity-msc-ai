@@ -18,7 +18,7 @@ def get_input_args():
     parser.add_argument('--save_dir', type=str, default='checkpoints', help='Directory to save checkpoints')
     parser.add_argument('--arch', type=str, default='vgg13', help='CNN model architecture (vgg13, vgg16, alexnet)')
     parser.add_argument('--learning_rate', type=float, default=0.01, help='Learning rate')
-    parser.add_argument('--hidden_units', type=int, default=512, help='Number of hidden units in the classifier')
+    parser.add_argument('--hidden_units', type=int, nargs='+', default=[512], help='Number of hidden units in the classifier (can provide multiple)')
     parser.add_argument('--epochs', type=int, default=5, help='Number of training epochs')
     parser.add_argument('--gpu', action='store_true', help='Use GPU for training if available')
     
@@ -74,6 +74,7 @@ def load_data(data_dir):
 def build_model(arch, hidden_units, num_classes):
     """
     Builds the model with a custom classifier.
+    Supports both a single integer or a list of integers for hidden_units.
     """
     if arch.startswith('vgg'):
         model = getattr(models, arch)(weights='DEFAULT')
@@ -106,13 +107,23 @@ def build_model(arch, hidden_units, num_classes):
         param.requires_grad = False
         
     # Define new classifier
-    classifier = nn.Sequential(OrderedDict([
-        ('fc1', nn.Linear(input_features, hidden_units)),
-        ('relu', nn.ReLU()),
-        ('dropout', nn.Dropout(0.2)),
-        ('fc2', nn.Linear(hidden_units, num_classes)), 
-        ('output', nn.LogSoftmax(dim=1))
-    ]))
+    if isinstance(hidden_units, (int, float)):
+        hidden_layers = [int(hidden_units)]
+    else:
+        hidden_layers = hidden_units # assuming it's a list
+        
+    classifier_layers = []
+    last_in = input_features
+    for h in hidden_layers:
+        classifier_layers.append(nn.Linear(last_in, h))
+        classifier_layers.append(nn.ReLU())
+        classifier_layers.append(nn.Dropout(0.2))
+        last_in = h
+    
+    classifier_layers.append(nn.Linear(last_in, num_classes))
+    classifier_layers.append(nn.LogSoftmax(dim=1))
+    
+    classifier = nn.Sequential(*classifier_layers)
     
     if hasattr(model, 'classifier'):
         model.classifier = classifier
@@ -194,10 +205,25 @@ def load_checkpoint(filepath):
     """
     Loads a checkpoint and rebuilds the model.
     """
-    checkpoint = torch.load(filepath)
-    model = build_model(checkpoint['arch'], checkpoint['hidden_units'], len(checkpoint['class_to_idx']))
+    checkpoint = torch.load(filepath, map_location=lambda storage, loc: storage, weights_only=False)
+    
+    arch = checkpoint.get('arch')
+    hidden_units = checkpoint.get('hidden_units', checkpoint.get('hidden_layers'))
+    
+    if 'class_to_idx' in checkpoint:
+        num_classes = len(checkpoint['class_to_idx'])
+    else:
+        num_classes = checkpoint.get('output_size')
+        
+    if arch is None or hidden_units is None or num_classes is None:
+        raise KeyError(f"Checkpoint at {filepath} is missing mandatory keys (arch, hidden_units/layers, class_to_idx/output_size)")
+
+    model = build_model(arch, hidden_units, num_classes)
     model.load_state_dict(checkpoint['state_dict'])
-    model.class_to_idx = checkpoint['class_to_idx']
+    
+    if 'class_to_idx' in checkpoint:
+        model.class_to_idx = checkpoint['class_to_idx']
+        
     return model
 
 def main():

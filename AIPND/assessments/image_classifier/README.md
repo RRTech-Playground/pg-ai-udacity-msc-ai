@@ -23,7 +23,7 @@ python train.py data_directory
 ### Options:
 * Set directory to save checkpoints: `python train.py data_dir --save_dir save_directory`
 * Choose architecture (e.g., vgg13, vgg16, alexnet): `python train.py data_dir --arch "vgg13"`
-* Set hyperparameters: `python train.py data_dir --learning_rate 0.01 --hidden_units 512 --epochs 20`
+* Set hyperparameters (e.g., single or multiple hidden layers): `python train.py data_dir --learning_rate 0.01 --hidden_units 4096 512 --epochs 20`
 * Use GPU for training: `python train.py data_dir --gpu`
 
 ## Prediction
