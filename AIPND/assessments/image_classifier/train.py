@@ -211,7 +211,7 @@ def main():
 
     device = (
         torch.accelerator.current_accelerator().type
-        if args.gpu and torch.cuda.is_available()
+        if args.gpu and torch.accelerator.is_available()
         else "cpu"
     )
 
