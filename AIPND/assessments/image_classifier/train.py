@@ -80,14 +80,15 @@ def build_model(arch, hidden_units, num_classes):
     Builds the model with a custom classifier.
     """
     if arch.startswith('vgg'):
-        model = getattr(models, arch)(pretrained=True)
+        model = getattr(models, arch)(weights='DEFAULT')
         input_features = model.classifier[0].in_features
     elif arch.startswith('alexnet'):
-        model = models.alexnet(pretrained=True)
-        input_features = model.classifier[0].in_features
+        model = models.alexnet(weights='DEFAULT')
+        # AlexNet's classifier[0] is Dropout, [1] is Linear
+        input_features = model.classifier[1].in_features
     else:
         print(f"Architecture {arch} not explicitly handled, attempting to load from torchvision.models...")
-        model = getattr(models, arch)(pretrained=True)
+        model = getattr(models, arch)(weights='DEFAULT')
         if hasattr(model, 'classifier'):
             if isinstance(model.classifier, nn.Sequential):
                 input_features = model.classifier[0].in_features
